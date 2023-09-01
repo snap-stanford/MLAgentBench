@@ -15,7 +15,7 @@ do
     bash multi_run_experiment.sh $log_dir/no_retrieval_gpt4/$task $task 8 {0..7} --llm-name gpt-4 --max-steps 30 --edit-script-llm-name gpt-4 --no-retrieval --fast-llm-name gpt-3.5-turbo
 done
 
-#### gpt4 experiments with crfm API + claude API as fast-llm-model
+#### gpt4 experiments with crfm API + claude API as the fast model
 for task in $all_tasks
 do 
     bash multi_run_experiment.sh $log_dir/gpt4/$task $task 8 {0..7} --llm-name openai/gpt-4-0314 --max-steps 30 --edit-script-llm-name openai/gpt-4-0314

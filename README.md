@@ -60,7 +60,7 @@ first_test/
         error.txt # will be generated if there is a system error
 ```
 
-If llm names are not specified, we use claude-v1 model by default for all LLM calls. See example logs with GPT-4 over cifar10 [here](https://drive.google.com/drive/folders/1Ozy_zKYdvwcSq3EFnkaudgUXKJmBwQ5t?usp=drive_link).
+If llm names are not specified in the args, we use claude-v1 model by default for all LLM calls. See example logs with GPT-4 over cifar10 [here](https://drive.google.com/drive/folders/1Ozy_zKYdvwcSq3EFnkaudgUXKJmBwQ5t?usp=drive_link).
 
 # Evaluation
 
