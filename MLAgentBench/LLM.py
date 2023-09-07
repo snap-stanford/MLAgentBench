@@ -23,8 +23,8 @@ except Exception as e:
 try:   
     import anthropic
     # setup anthropic API key
-    anthropic_client = anthropic.Client(open("claude_api_key.txt").read().strip())
-except e:
+    anthropic_client = anthropic.Anthropic(api_key=open("claude_api_key.txt").read().strip())
+except Exception as e:
     print(e)
     print("Could not load anthropic API key claude_api_key.txt.")
     
@@ -33,7 +33,7 @@ try:
     # setup OpenAI API key
     openai.organization, openai.api_key  =  open("openai_api_key.txt").read().strip().split(":")    
     os.environ["OPENAI_API_KEY"] = openai.api_key 
-except e:
+except Exception as e:
     print(e)
     print("Could not load OpenAI API key openai_api_key.txt.")
 
@@ -61,21 +61,21 @@ def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model=
         ai_prompt = kwargs["ai_prompt"]
 
     try:
-        resp = anthropic_client.completion(
+        rsp = anthropic_client.completions.create(
             prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
             stop_sequences=stop_sequences,
             model=model,
-            temperature1=temperature,
+            temperature=temperature,
             max_tokens_to_sample=max_tokens_to_sample,
             **kwargs
         )
-    except anthropic.api.ApiException as e:
+    except anthropic.APIStatusError as e:
         print(e)
         raise TooLongPromptError()
     except Exception as e:
         raise LLMError(e)
 
-    completion = resp["completion"]
+    completion = rsp.completion
     if log_file is not None:
         log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
     return completion
