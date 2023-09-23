@@ -1,6 +1,7 @@
 # MLAgentBench
 
-MLAgentBench a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the goal of the agent is to take a given dataset and a machine learning task description and autonomously develop or improve an ML model. Paper: [Large Language Models as AI Research Agents](research_agent.pdf)  
+MLAgentBench a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the goal of the agent is to take a given 
+dataset and a machine learning task description and autonomously develop or improve an ML model.
 ![](figs/main.png)
 
 
@@ -17,11 +18,6 @@ The MLAgentBench package can be installed with
 ```
 pip install -e .
 ```
-or directly from github
-```
-pip install git+git://github.com/qhwang/MLAgentBench/
-```
-
 
 Install dependencies with python 3.10 by running 
 ```
