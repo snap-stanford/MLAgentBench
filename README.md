@@ -23,7 +23,7 @@ Install dependencies with python 3.10 by running
 ```
 bash install.sh
 ```
-or use our [docker image](https://hub.docker.com/layers/qhwang123/researchassistant/latest/images/sha256-6b3690a13ba44fd089086e9860a298ed49a179d9a04a5406c0df074569a3aabe?context=repo). Since agent will modify and execute files, we recommand running experiments within sandboxes such as docker container.
+or use our [docker image](https://hub.docker.com/layers/qhwang123/researchassistant/latest/images/sha256-6b3690a13ba44fd089086e9860a298ed49a179d9a04a5406c0df074569a3aabe?context=repo). Since agent will modify and execute files, we recommend running experiments within sandboxes such as docker container.
 
 Each dataset will be prepared when it is run the first time. You can also prepare them beforehand with 
 ```
