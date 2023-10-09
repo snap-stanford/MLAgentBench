@@ -1,7 +1,7 @@
-# MLAgentBench
+# MLAgentBench: Benchmarking Large Language Models As AI Research Agents
 
 MLAgentBench a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the goal of the agent is to take a given 
-dataset and a machine learning task description and autonomously develop or improve an ML model.
+dataset and a machine learning task description and autonomously develop or improve an ML model. Paper: https://arxiv.org/abs/2310.03302
 ![](figs/main.png)
 
 
