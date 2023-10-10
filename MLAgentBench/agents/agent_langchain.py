@@ -17,7 +17,6 @@ from langchain.schema import (
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from langchain.input import get_color_mapping
 from langchain.callbacks import FileCallbackHandler
-from langchain.chat_models import ChatAnthropic
 from langchain.agents.mrkl.output_parser import MRKLOutputParser
 from MLAgentBench.schema import Action
 from .agent import Agent
