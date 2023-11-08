@@ -29,21 +29,28 @@ For docker, use the following instructions:
 ```
 docker pull qhwang123/researchassistant:latest
 ```
-2. Run the docker container from the image, mounting the current directory to `/MLAgentBench` inside the container:
+2. Run the docker container from the image, mounting the current directory to `/MLAgentBench` inside the container with root user permissions to install other packages:
 - On Windows PowerShell
 ```
-docker run -it -v ${PWD}:/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
+docker run -it --user root -v ${PWD}:/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
 ```
 - On Mac or Linux
 ```
-docker run -it -v "$(pwd)":/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
+docker run -it --user root -v "$(pwd)":/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
 ```
 
 Each dataset will be prepared when it is run the first time. You can also prepare them beforehand with 
 ```
 python -u -m MLAgentBench.prepare_task <task_name> $(which python)
 ```
-For Kaggle datasets, you need to set up Kaggle API and authentication (~/.kaggle/kaggle.json) as described [here](https://www.kaggle.com/docs/api). You may also need to provide manual consent to the rules of specific competitions by following the prompts.
+For Kaggle datasets, you need to set up Kaggle API and authentication (~/.kaggle/kaggle.json) as described [here](https://www.kaggle.com/docs/api). You may also need to provide manual consent to the rules of specific competitions by following the prompts. For docker, use the following instructions:
+1. Ensure that you have ".kaggle/kaggle.json" with your API credentials in the MLAgentBench root folder.
+2. Once your container is mounted (instructions above), run
+```
+export KAGGLE_CONFIG_DIR=/MLAgentBench/.kaggle
+pip install kaggle
+sudo apt-get install unzip
+```
 
 Finally, put API keys under the root directory of this repo (or wherever you run scripts from). Currently, we support OpenAI (openai_api_key.txt in the format of organization:APIkey), Claude (claude_api_key.txt), and CRFM API (crfm_api_key.txt). To use an AutoGPT agent, setup the directory as described [here](https://docs.agpt.co/setup/).
 
