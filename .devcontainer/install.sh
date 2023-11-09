@@ -8,7 +8,7 @@ source activate mlagentbench
 # pip install crfm-helm
 
 # ML dependencies
-conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+conda install -y pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 pip install -r requirements.txt
 pip install pyg_lib torch_scatter torch_sparse torch_cluster -f https://data.pyg.org/whl/torch-2.0.1+cu117.html
 pip install typing-inspect==0.8.0 typing_extensions==4.5.0

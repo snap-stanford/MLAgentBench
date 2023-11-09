@@ -12,6 +12,7 @@ COPY install.sh .
 COPY requirements.txt .
 RUN chown user:user install.sh
 RUN apt-get update && apt-get install -y --no-install-recommends gcc &&  rm -r /var/lib/apt/lists/*
+RUN apt-get update &&  apt-get install unzip
 USER user
 
 # Install libraries 

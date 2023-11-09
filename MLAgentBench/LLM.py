@@ -31,11 +31,14 @@ except Exception as e:
 try:
     import openai
     # setup OpenAI API key
-    openai.organization, openai.api_key  =  open("openai_api_key.txt").read().strip().split(":")    
-    os.environ["OPENAI_API_KEY"] = openai.api_key 
+    if os.path.exists("openai_api_key.txt"):
+        openai.organization, openai.api_key  =  open("openai_api_key.txt").read().strip().split(":")    
+        os.environ["OPENAI_API_KEY"] = openai.api_key 
+    elif not "OPENAI_API_KEY" in os.environ:
+        raise Exception()
 except Exception as e:
     print(e)
-    print("Could not load OpenAI API key openai_api_key.txt.")
+    print("Could not load OpenAI API key openai_api_key.txt. and the environment variable is not there")
 
 
 def log_to_file(log_file, prompt, completion, model, max_tokens_to_sample):

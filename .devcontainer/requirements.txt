@@ -39,7 +39,7 @@ kaggle
 # tensorrt
 
 # llm
-openai
+openai==0.28
 anthropic
 langchain
 sentencepiece
