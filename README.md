@@ -1,6 +1,6 @@
 # MLAgentBench: Benchmarking Large Language Models As AI Research Agents
 
-MLAgentBench a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the goal of the agent is to take a given 
+MLAgentBench is a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the agent aims to take a given 
 dataset and a machine learning task description and autonomously develop or improve an ML model. Paper: https://arxiv.org/abs/2310.03302
 ![](figs/main.png)
 
@@ -24,14 +24,35 @@ Install dependencies with python 3.10 by running
 bash install.sh
 ```
 or use our [docker image](https://hub.docker.com/layers/qhwang123/researchassistant/latest/images/sha256-6b3690a13ba44fd089086e9860a298ed49a179d9a04a5406c0df074569a3aabe?context=repo). Since agent will modify and execute files, we recommend running experiments within sandboxes such as docker container.
+For docker, use the following instructions: 
+1. Pull the docker image:
+```
+docker pull qhwang123/researchassistant:latest
+```
+2. Run the docker container from the image, mounting the current directory to `/MLAgentBench` inside the container with root user permissions to install other packages:
+- On Windows PowerShell
+```
+docker run -it --user root -v ${PWD}:/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
+```
+- On Mac or Linux
+```
+docker run -it --user root -v "$(pwd)":/MLAgentBench -w /MLAgentBench qhwang123/researchassistant:latest
+```
 
 Each dataset will be prepared when it is run the first time. You can also prepare them beforehand with 
 ```
 python -u -m MLAgentBench.prepare_task <task_name> $(which python)
 ```
-For Kaggle datasets, you need to set up Kaggle API and authentication (~/.kaggle/kaggle.json) as described [here](https://www.kaggle.com/docs/api). You may also need to provide manual consent to the rules of specific competitions by following the prompts.
+For Kaggle datasets, you need to set up Kaggle API and authentication (~/.kaggle/kaggle.json) as described [here](https://www.kaggle.com/docs/api). You may also need to provide manual consent to the rules of specific competitions by following the prompts. For docker, use the following instructions:
+1. Ensure that you have ".kaggle/kaggle.json" with your API credentials in the MLAgentBench root folder.
+2. Once your container is mounted (instructions above), run
+```
+export KAGGLE_CONFIG_DIR=/MLAgentBench/.kaggle
+pip install kaggle
+sudo apt-get install unzip
+```
 
-Finally, put API keys under the root directory of this repo (or wherever you run scripts from). Currently, we support OpenAI (openai_api_key.txt in format of organization:APIkey), Claude (claude_api_key.txt), and CRFM API (crfm_api_key.txt). To use an AutoGPT agent, setup the directory as described [here](https://docs.agpt.co/setup/).
+Finally, put API keys under the root directory of this repo (or wherever you run scripts from). Currently, we support OpenAI (openai_api_key.txt in the format of organization:APIkey), Claude (claude_api_key.txt), and CRFM API (crfm_api_key.txt). To use an AutoGPT agent, setup the directory as described [here](https://docs.agpt.co/setup/).
 
 # Quick Start
 
@@ -41,7 +62,7 @@ To run our research agent on cifar10 task with openai API using gpt-4 and gpt-3.
 python -u -m MLAgentBench.runner --python $(which python) --task cifar10 --device 0 --log-dir first_test  --work-dir workspace --llm-name gpt-4 --edit-script-llm-name gpt-4 --fast-llm-name gpt-3.5-turbo
 ```
 
-This will produce logs in `first_test` directory with structure
+This will produce logs in `first_test` directory with the following structure
 ```
 first_test/
     agent_log/
@@ -80,7 +101,7 @@ Each task is a folder in `MLAgentBench/benchmarks/`, under which the `env/` fold
 
 # Agents
 
-We currently support variants of our research agent along with langchain and autogpt agent. See `run_experiments.sh` for their commands.
+We currently support variants of our research agent along with langchain and autogpt agents. See `run_experiments.sh` for their commands.
 
 # Results
 Success Rate, i.e. the percentages of runs that achieve more than 10% improvement at the
@@ -96,5 +117,5 @@ submission at the last step:
 
 # Interactive Mode (Under construction)
 
-You can also specify task interactively to research agent by running `research_agent_interactive.sh`, or ideally as a vscode extension.
+You can also specify tasks interactively to the research agent by running `research_agent_interactive.sh`, or ideally as a vscode extension.
 
