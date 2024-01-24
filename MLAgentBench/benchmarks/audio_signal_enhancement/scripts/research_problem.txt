@@ -1,0 +1,6 @@
+Implement the neural network and loss function on the Pulse algorithm in The Audio Signal Enhancement Benchmark. The algorithm description is available in both loss_function_description.txt and model_description.txt, the neural network model description can be found in model_description.txt, and the loss function description is available in loss_function_description.txt.
+Note that to implement the neural network, you should finish the "make_CNN" class  (L3 in the model.py). To implement the loss function, you should finish the "weighted_pu_loss" function (L40 in the loss.py).
+To test the model, execute model_test.py. To test the loss function, execute loss_text.py. Both test files will provide Prompting information if generated code failed the tests. Improve your code according to the information until pass the tests.
+
+
+
