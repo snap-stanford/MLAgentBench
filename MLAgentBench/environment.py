@@ -158,9 +158,9 @@ class Environment:
         # prepare if there is a prepare.py and it has not been prepared
         prepare_task(benchmark_dir, self.args.python)
 
-        # copy the benchmarks folder to work_dir
+        # copy the benchmarks folder to work_dir, both env and scripts are included
         if os.path.exists(os.path.join(benchmark_dir, "env" )):
-            shutil.copytree(os.path.join(benchmark_dir, "env"), work_dir, symlinks=True)
+            shutil.copytree(benchmark_dir, work_dir, symlinks=True)
 
         # find all read only files
         if os.path.exists(os.path.join(benchmark_dir, "scripts", "read_only_files.txt")):
@@ -248,8 +248,8 @@ class Environment:
         # set time out
         def signal_handler(signum, frame):
             raise TimeoutException("Timed out!")
-        signal.signal(signal.SIGALRM, signal_handler)
-        signal.alarm(self.args.max_time)
+        # signal.signal(signal.SIGALRM, signal_handler)
+        # signal.alarm(self.args.max_time)
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):  
