@@ -50,6 +50,7 @@ rouge-score
 peft
 accelerate
 evaluate
+vertaxai
 
 # graph
 torch-geometric==2.3.1
