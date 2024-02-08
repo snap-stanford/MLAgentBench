@@ -54,6 +54,8 @@ sudo apt-get install unzip
 
 Finally, put API keys under the root directory of this repo (or wherever you run scripts from). Currently, we support OpenAI (openai_api_key.txt in the format of organization:APIkey), Claude (claude_api_key.txt), and CRFM API (crfm_api_key.txt). To use an AutoGPT agent, setup the directory as described [here](https://docs.agpt.co/setup/).
 
+Update: We support gemini pro and huggingface now! To run gemini, fill in PROJECT_ID in LLM.py to your project id. To run huggingface, specifiy model as huggingface/<org name>/<model name>.
+
 # Quick Start
 
 To run our research agent on cifar10 task with openai API using gpt-4 and gpt-3.5-turbo:
@@ -90,6 +92,11 @@ This will evaluate all runs under <log_folder> as a json.
 
 To run baseline, run the trivial policy of directly running train.py then submit with ``--agent_type Agent`` as in baseline.sh:
 
+```
+python -u -m MLAgentBench.runner --python $(which python) --task cifar10 --device 0 --log-dir first_test  --work-dir workspace --agent_type Agent
+```
+
+Finally, to reproduce plots with jsons genereated, run plot.py in MLAgentBench.
 
 # Run Experiments
 

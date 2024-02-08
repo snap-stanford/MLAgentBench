@@ -37,7 +37,35 @@ except Exception as e:
     print(e)
     print("Could not load OpenAI API key openai_api_key.txt.")
 
+try:
+    import vertexai
+    from vertexai.preview.generative_models import GenerativeModel, Part
+    from google.cloud.aiplatform_v1beta1.types import SafetySetting, HarmCategory
+    vertexai.init(project=PROJECT_ID, location="us-central1")
+except Exception as e:
+    print(e)
+    print("Could not load VertexAI API.")
 
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import StoppingCriteria, StoppingCriteriaList
+import torch
+
+loaded_hf_models = {}
+
+class StopAtSpecificTokenCriteria(StoppingCriteria):
+    def __init__(self, stop_sequence):
+        super().__init__()
+        self.stop_sequence = stop_sequence
+
+    def __call__(self, input_ids, scores, **kwargs):
+        # Create a tensor from the stop_sequence
+        stop_sequence_tensor = torch.tensor(self.stop_sequence, device=input_ids.device, dtype=input_ids.dtype)
+
+        # Check if the current sequence ends with the stop_sequence
+        current_sequence = input_ids[:, -len(self.stop_sequence) :]
+        return bool(torch.all(current_sequence == stop_sequence_tensor).item())
+
+    
 def log_to_file(log_file, prompt, completion, model, max_tokens_to_sample):
     """ Log the prompt and completion to a file."""
     with open(log_file, "a") as f:
@@ -52,6 +80,60 @@ def log_to_file(log_file, prompt, completion, model, max_tokens_to_sample):
         f.write(f"Number of sampled tokens: {num_sample_tokens}\n")
         f.write("\n\n")
 
+def complete_text_hf(prompt, stop_sequences=[], model="huggingface/codellama/CodeLlama-7b-hf", max_tokens_to_sample = 2000, temperature=0.5, log_file=None, **kwargs):
+    model = model.split("/", 1)[1]
+    if model in loaded_hf_models:
+        hf_model, tokenizer = loaded_hf_models[model]
+    else:
+        hf_model = AutoModelForCausalLM.from_pretrained(model).to("cuda:6")
+        tokenizer = AutoTokenizer.from_pretrained(model)
+        loaded_hf_models[model] = (hf_model, tokenizer)
+        
+    encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to("cuda:6")
+    stop_sequence_ids = tokenizer(stop_sequences, return_token_type_ids=False, add_special_tokens=False)
+    stopping_criteria = StoppingCriteriaList()
+    for stop_sequence_input_ids in stop_sequence_ids.input_ids:
+        stopping_criteria.append(StopAtSpecificTokenCriteria(stop_sequence=stop_sequence_input_ids))
+
+    output = hf_model.generate(
+        **encoded_input,
+        temperature=temperature,
+        max_new_tokens=max_tokens_to_sample,
+        do_sample=True,
+        return_dict_in_generate=True,
+        output_scores=True,
+        stopping_criteria = stopping_criteria,
+        **kwargs,
+    )
+    sequences = output.sequences
+    sequences = [sequence[len(encoded_input.input_ids[0]) :] for sequence in sequences]
+    all_decoded_text = tokenizer.batch_decode(sequences)
+    completion = all_decoded_text[0]
+    if log_file is not None:
+        log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
+    return completion
+
+
+def complete_text_gemini(prompt, stop_sequences=[], model="gemini-pro", max_tokens_to_sample = 2000, temperature=0.5, log_file=None, **kwargs):
+    """ Call the gemini API to complete a prompt."""
+    # Load the model
+    model = GenerativeModel("gemini-pro")
+    # Query the model
+    parameters = {
+            "temperature": temperature,
+            "max_output_tokens": max_tokens_to_sample,
+            "stop_sequences": stop_sequences,
+            **kwargs
+        }
+    safety_settings = {
+            harm_category: SafetySetting.HarmBlockThreshold(SafetySetting.HarmBlockThreshold.BLOCK_NONE)
+            for harm_category in iter(HarmCategory)
+        }
+    response = model.generate_content( [prompt], generation_config=parameters, safety_settings=safety_settings)
+    completion = response.text
+    if log_file is not None:
+        log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
+    return completion
 
 def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model="claude-v1", max_tokens_to_sample = 2000, temperature=0.5, log_file=None, **kwargs):
     """ Call the Claude API to complete a prompt."""
@@ -153,6 +235,10 @@ def complete_text(prompt, log_file, model, **kwargs):
     if model.startswith("claude"):
         # use anthropic API
         completion = complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT, "Observation:"], log_file=log_file, model=model, **kwargs)
+    elif model.startswith("gemini"):
+        completion = complete_text_gemini(prompt, stop_sequences=["Observation:"], log_file=log_file, model=model, **kwargs)
+    elif model.startswith("huggingface"):
+        completion = complete_text_hf(prompt, stop_sequences=["Observation:"], log_file=log_file, model=model, **kwargs)
     elif "/" in model:
         # use CRFM API since this specifies organization like "openai/..."
         completion = complete_text_crfm(prompt, stop_sequences=["Observation:"], log_file=log_file, model=model, **kwargs)
