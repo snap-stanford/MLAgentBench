@@ -1,5 +1,5 @@
 #/bin/bash
-all_tasks="cifar10-training"
+all_tasks="cifar10"
 
 for task in $all_tasks
 do    

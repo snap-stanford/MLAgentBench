@@ -59,4 +59,4 @@ if __name__ == "__main__":
         python = "python"
     benchmark_name, _ = get_task_info(task)
     benchmark_dir = os.path.join(benchmarks_dir, benchmark_name)
-    prepare_task(task, python=python)
+    prepare_task(benchmark_dir, python=python)
