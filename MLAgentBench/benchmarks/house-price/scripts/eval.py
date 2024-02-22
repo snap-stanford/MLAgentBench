@@ -7,8 +7,8 @@ import numpy as np
 def get_score(submission_folder = "../env"):
     submission_path = os.path.join(submission_folder, "submission.csv")
     submission = pd.read_csv(submission_path)
-    test_data = pd.read_csv('answer.csv')
-
+    test_data = pd.read_csv(os.path.join(os.path.dirname(__file__), 'answer.csv'))
+    
     mae = sum(abs(submission['SalePrice'] - test_data['SalePrice']))/len(test_data['SalePrice'])
 
     return mae
