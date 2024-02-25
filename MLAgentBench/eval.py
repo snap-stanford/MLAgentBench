@@ -31,14 +31,20 @@ def oom_error(path):
     log = path.replace("trace.json", "../log")
     main_log = path.replace("trace.json", "../agent_log/main_log")
     message = "CUDA out of memory"
-    return (message in open(log, "r").read()) or (message in open(main_log, "r").read())
+
+    if os.path.exists(log): # sometimes the log file is not created
+        return (message in open(log, "r").read()) or (message in open(main_log, "r").read())
+    return (message in open(main_log, "r").read())
     
 
 def connection_error(path):
     log = path.replace("trace.json", "../log")
     main_log = path.replace("trace.json", "../agent_log/main_log")
     bad = ["You exceeded your current quota, please check your plan and billing details.", "Error: 'text-similarity-ada-001'", "Error: 'text-embedding-ada-001'"]
-    return ("Connection aborted" in open(log, "r").read()) or (any([b in open(main_log, "r").read() for b in bad])) 
+
+    if os.path.exists(log): # sometimes the log file is not created
+        return ("Connection aborted" in open(log, "r").read()) or (any([b in open(main_log, "r").read() for b in bad])) 
+    return (any([b in open(main_log, "r").read() for b in bad])) 
 
 def error(path):
     return os.path.exists(os.path.join(path.replace("trace.json", ""), "error.txt")) or not os.path.exists(os.path.join(path.replace("trace.json", ""), "overall_time.txt"))
