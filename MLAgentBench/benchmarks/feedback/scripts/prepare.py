@@ -2,7 +2,8 @@ import subprocess
 import pandas as pd
 
 taskname = "feedback-prize-english-language-learning"
-download_dir = "../env"
+# download_dir = f"benchmarks/{taskname}/env"
+download_dir = "benchmarks/" + taskname + "/env"
 
 input(f"Consent to the competition at https://www.kaggle.com/competitions/{taskname}/data; Press any key after you have accepted the rules online.")
 
