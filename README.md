@@ -61,8 +61,10 @@ Update: We support gemini pro and huggingface now! To run gemini, fill in PROJEC
 To run our research agent on cifar10 task with openai API using gpt-4 and gpt-3.5-turbo:
 
 ```
-python -u -m MLAgentBench.runner --python $(which python) --task cifar10 --device 0 --log-dir first_test  --work-dir workspace --llm-name gpt-4 --edit-script-llm-name gpt-4 --fast-llm-name gpt-3.5-turbo
+python -u -m MLAgentBench.runner --python $(which python) --task cifar10 --device 0 --log-dir first_test  --work-dir workspace --llm-name gpt-4 --edit-script-llm-name gpt-4 --fast-llm-name gpt-3.5-turbo >  first_test/log 2>&1
 ```
+
+Note: capturing log is necessary for oom error etc runtime error detection.
 
 This will produce logs in `first_test` directory with the following structure
 ```
@@ -98,9 +100,13 @@ python -u -m MLAgentBench.runner --python $(which python) --task cifar10 --devic
 
 Finally, to reproduce plots with jsons genereated, run plot.py in MLAgentBench.
 
-# Run Experiments
+# Workflow
 
-To run parallel experiments over different tasks and different agents, you can use `run_experiments.sh`
+To run the benchmark systematically, we recommend the following workflow:
+
+1. Run parallel experiments over different tasks and different agents using `run_experiments.sh`. This will generate log folders in structure of final_exp_logs/<model_name>/<run_timestamp>/...
+2. Run eval.sh with properly specified models and tasks to generate evaluation jsons.
+3. Use plot.py in MLAgentBench to analyze the results. Note you need to fix some paths and names in the file as marked with TODO.
 
 # Tasks
 

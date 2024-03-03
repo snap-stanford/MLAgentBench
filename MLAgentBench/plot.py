@@ -113,10 +113,9 @@ def long_prompt_error(path):
 
 
 def get_all_runs_with_log():
-    all_runs = glob.glob("/lfs/local/0/qhwang/nlp_logs/lfs/local/0/qhwang/final_exp_logs/*/*/*/env_log/trace.json")
+    
+    #TODO: fix paths to where your trace.json are
     all_runs.extend(glob.glob("/lfs/local/0/qhwang/nlp_logs/final_exp_logs*/*/*/*/env_log/trace.json"))
-    all_runs.extend(glob.glob("/lfs/local/0/qhwang/nlp_logs/jian_*/*/*/*/env_log/trace.json"))
-    all_runs.extend(glob.glob("/lfs/local/0/qhwang/nlp_logs/scr/biggest/qhwang/final_exp_logs*/*/*/*/env_log/trace.json"))
 
 
     df = pd.DataFrame()
@@ -144,6 +143,7 @@ def get_all_runs_with_log():
 
 lower_the_better_tasks = [ "parkinsons-disease", "feedback", "BabyLM", "llama-inference", "house-price", "vectorization"]
 
+# TODO: add propoer label mapping and task name mapping for pretty printing in the figure
 print_labels = {
     "no_retrieval_gpt4" : "GPT-4",
     "no_retrieval" : "Claude v1.0",
@@ -186,7 +186,7 @@ def get_improvement(df, baseline, thresh = None, prefix=""):
 # performance
 def get_all_runs_eval(print_labels = print_labels, print_task_labels = print_task_labels):
 
-    # collect all jsons into all_results
+    # TODO: collect all evaluation jsons into all_results
     all_results = {}
     for f in glob.glob("/lfs/local/0/qhwang/nlp_logs/*.json"):
         all_results.update(json.load(open(f, "r")))
@@ -206,16 +206,6 @@ def get_all_runs_eval(print_labels = print_labels, print_task_labels = print_tas
         run = run.strip()
         for source_file, r in results.items():
             r_ = copy.deepcopy(r)
-            if "jian" in source_file:
-                if "full" in r["path"]:
-                    continue  
-                if os.path.exists(r["path"]):
-                    r_["path"] = r["path"]
-                else:
-                    print("no path: ", r["path"])
-                    continue
-            else:
-                r_["path"] = "/lfs/local/0/qhwang/nlp_logs/" + (r["path"] if not r["path"].startswith("/") else r["path"][1:])
             if len(r["score"]) < len(r["score_steps"])+1:
                 r_["score"].append(r["final_score"])
             r_["score_steps"].append(len(json.load(open(r_["path"], "r"))["steps"]))

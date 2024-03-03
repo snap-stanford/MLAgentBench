@@ -67,24 +67,7 @@ class EvaluationResult:
 
 
 def run_eval(log_folder, benchmark_folder_name, eval_intermediate=False):
-    initial_prompt = '''You are an evaluator and have to reflect on the performance of a research assistant. 
-    You shall be given the summarized logs of what all actions the research assistant tried and what were the observations on executing those
-    actions. Based on that, answer the following question in only Y or N: \n
-    '''
-    rubric_questions = [
-    "Did the run give a final answer and actually solved the task?", 
-    "Did the run give a final answer but due to some hallucination?",
-    "Did the run fail in some sort of debugging and hence max steps were reached and agent could not come with a final answer?",
-    "Did the run failed due to max token length exceeded?",
-    "Did the run show some hallucination in intermediate steps irrespective of the final answer/issue?",
-    "Did the agent show lack of a research plan and steps followed by it were not very logical?",
-    "Did the agent show some sort of lack of domain expertise in that research area?"]
-
-    final_prompt = '''You are given a summarized log of actions and observations in order to solve a task. 
-    Please provide a final 2-3 line summary of what happened in the run for a human to understand the log.'''
-
     results = {}    
-    summarized_log = ''
     for subdir, dirs, files in os.walk(log_folder):
         for file in files:
 
@@ -110,41 +93,7 @@ def run_eval(log_folder, benchmark_folder_name, eval_intermediate=False):
                 for step in range(len(data['steps'])):
                     if data['steps'][step]["action"]["name"] == "Final Answer":
                         result.submitted_final_answer = True
-                
-                # for step in range(len(data['steps'])):
-                #     summarized_log += f"\n Step {step}: \n"
-                #     summarized_log += f"Action: {data['steps'][step]['action']['name']} \n"
-                #     prompt = f'''You are given the observation on executing an action {data['steps'][step]['action']['name']}. \n 
-                #     The arguments for this action are {data['steps'][step]['action']['args']}. \n
-                #     This leads to the following observation: \n {data['steps'][step]['observation']}.\n
-                #     Based on the above, your task is to crisply summarize this step based on the action taken and the observation received in 3-4 lines.
-                #     '''
-                #     summarized_observation = complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], log_file=None)
-                #     summarized_log += f"Summarized Observation: {summarized_observation} \n"
-                
-                # result.summary = summarized_log
-
-                # for ques in rubric_questions:
-                #     prompt = initial_prompt + "\n" + summarized_log + "\n" + ques + "\n"
-                #     answer = complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], log_file=None)
-                #     result.rubric_questions[ques] = answer.strip()
-
-                # prompt = summarized_log + "\n" + final_prompt + "\n"
-                # answer = complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], log_file=None)
-                # result.rubric_questions[ques] = answer.strip()
-                # eval_score = 0
-
-                # file_path = os.path.join(subdir, 'traces/step_final_files/submission.csv')
-                # if os.path.exists(file_path):
-                #     module = importlib.import_module(f'benchmarks.{benchmark_folder_name}.scripts.eval')
-                #     eval_score = module.get_score(file_path)
-                # else:
-                #     file_path = os.path.join(subdir, f'traces/step_{num_steps-1}_files/submission.csv')
-                #     if os.path.exists(file_path):
-                #         module = importlib.import_module(f'benchmarks.{benchmark_folder_name}.scripts.eval')
-                #         eval_score = module.get_score(file_path)
-                
-                num_steps_eval = 5
+                num_steps_eval = 50
                 step_list = range(num_steps)
                 if num_steps_eval >= len(step_list):
                     subsampled_list = step_list
