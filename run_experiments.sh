@@ -3,7 +3,7 @@
 # example tasks to run
 all_tasks="cifar10 imdb"
 log_dir=final_exp_logs
-models="claude2.1 gpt-4-0125-preview gemini-pro"
+models="claude-2.1 gpt-4-0125-preview gemini-pro"
 
 for model in $models
 do
