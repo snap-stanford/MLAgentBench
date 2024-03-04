@@ -39,7 +39,7 @@ do
     mkdir -p $folder/$ts
 
 
-    python -u -m MLAgentBench.prepare_task $task $python
+    # python -u -m MLAgentBench.prepare_task $task $python
     echo "python -u -m MLAgentBench.runner --python $python --task $task --device $i --log-dir $folder/$ts  --work-dir workspaces/$folder/$ts ${extra_args} > $folder/$ts/log 2>&1"
     eval "python -u -m MLAgentBench.runner --python $python --task $task --device $i --log-dir $folder/$ts  --work-dir workspaces/$folder/$ts ${extra_args}" > $folder/$ts/log 2>&1 &
 

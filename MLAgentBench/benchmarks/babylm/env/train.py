@@ -71,7 +71,7 @@ class ModelArguments:
     """
 
     model_name_or_path: Optional[str] = field(
-        default=None,
+        default="gpt2",
         metadata={
             "help": (
                 "The model checkpoint for weights initialization.Don't set if you want to train a model from scratch."
