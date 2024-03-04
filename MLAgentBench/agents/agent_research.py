@@ -73,7 +73,7 @@ class ResearchAgent(Agent):
 
             prompt = self.initial_prompt
             if curr_step > last_steps:
-                if not self.args.no_retrieval:
+                if self.args.retrieval:
 
                     # retrieval action
                     relevant_history = env.execute(Action("Retrieval from Research Log", {"current_plan": ""}))
@@ -194,7 +194,7 @@ class ResearchAgent(Agent):
             #######################################################
             #      write to research log for retrieval            #
             #######################################################
-            if not self.args.no_retrieval:
+            if self.args.retrieval:
                 summary_of_last_step = "Too long to summarize."
                 for _ in range(self.args.max_retries):
                     try:

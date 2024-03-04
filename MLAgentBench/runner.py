@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # research agent configs
     parser.add_argument("--actions-remove-from-prompt", type=str, nargs='+', default=[], help="actions to remove in addition to the default ones: Read File, Write File, Append File, Retrieval from Research Log, Append Summary to Research Log, Python REPL, Edit Script Segment (AI)")
     parser.add_argument("--actions-add-to-prompt", type=str, nargs='+', default=[], help="actions to add")
-    parser.add_argument("--no-retrieval", action="store_true", help="disable retrieval")
+    parser.add_argument("--retrieval", action="store_true", help="enable retrieval")
     parser.add_argument("--valid-format-entires", type=str, nargs='+', default=None, help="valid format entries")
     parser.add_argument("--max-steps-in-context", type=int, default=3, help="max steps in context")
     parser.add_argument("--max-observation-steps-in-context", type=int, default=3, help="max observation steps in context")
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(args, file=sys.stderr)
-    if args.no_retrieval or args.agent_type != "ResearchAgent":
+    if not args.retrieval or args.agent_type != "ResearchAgent":
         # should not use these actions when there is no retrieval
         args.actions_remove_from_prompt.extend(["Retrieval from Research Log", "Append Summary to Research Log", "Reflection"])
     LLM.FAST_MODEL = args.fast_llm_name
