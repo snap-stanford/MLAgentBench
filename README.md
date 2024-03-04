@@ -105,7 +105,8 @@ Finally, to reproduce plots with jsons genereated, run plot.py in MLAgentBench.
 To run the benchmark systematically, we recommend the following workflow:
 
 1. Run parallel experiments over different tasks and different agents using `run_experiments.sh`. This will generate log folders in structure of final_exp_logs/<model_name>/<run_timestamp>/...
-2. Run eval.sh with properly specified models and tasks to generate evaluation jsons.
+2. Run baseline.sh on all tasks to provide baselines.
+2. Run eval.sh with properly specified models and tasks to generate evaluation jsons, including baselines.
 3. Use plot.py in MLAgentBench to analyze the results. Note you need to fix some paths and names in the file as marked with TODO.
 
 # Tasks
