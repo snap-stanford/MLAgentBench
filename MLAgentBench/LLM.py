@@ -13,14 +13,8 @@ try:
     from helm.proxy.accounts import Account
     from helm.proxy.services.remote_service import RemoteService
     # setup CRFM API
-    # auth = Authentication(api_key=open("crfm_api_key.txt").read().strip())
-    # service = RemoteService("https://crfm-models.stanford.edu")
-    auth = Authentication(api_key="root")
-    # service = RemoteService("http://172.24.75.232:1959") # ampere7
-    # service = RemoteService("http://172.24.75.197:1959") # ampere4
-    # service = RemoteService("http://172.24.67.78:1959") # sphinx 2
-    # service = RemoteService("http://172.24.75.218:1959") # ampere5
-    service = RemoteService("http://172.24.75.79:1959") # ampere3
+    auth = Authentication(api_key=open("crfm_api_key.txt").read().strip())
+    service = RemoteService("https://crfm-models.stanford.edu")
     account: Account = service.get_account(auth)
 except Exception as e:
     print(e)
@@ -47,7 +41,7 @@ try:
     import vertexai
     from vertexai.preview.generative_models import GenerativeModel, Part
     from google.cloud.aiplatform_v1beta1.types import SafetySetting, HarmCategory
-    vertexai.init(project="398168369609", location="us-central1")
+    vertexai.init(project=PROJECT_ID, location="us-central1")
 except Exception as e:
     print(e)
     print("Could not load VertexAI API.")
@@ -91,11 +85,11 @@ def complete_text_hf(prompt, stop_sequences=[], model="huggingface/codellama/Cod
     if model in loaded_hf_models:
         hf_model, tokenizer = loaded_hf_models[model]
     else:
-        hf_model = AutoModelForCausalLM.from_pretrained(model).to("cuda:9")
+        hf_model = AutoModelForCausalLM.from_pretrained(model).to("cuda:6")
         tokenizer = AutoTokenizer.from_pretrained(model)
         loaded_hf_models[model] = (hf_model, tokenizer)
         
-    encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to("cuda:9")
+    encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to("cuda:6")
     stop_sequence_ids = tokenizer(stop_sequences, return_token_type_ids=False, add_special_tokens=False)
     stopping_criteria = StoppingCriteriaList()
     for stop_sequence_input_ids in stop_sequence_ids.input_ids:
@@ -135,8 +129,6 @@ def complete_text_gemini(prompt, stop_sequences=[], model="gemini-pro", max_toke
             harm_category: SafetySetting.HarmBlockThreshold(SafetySetting.HarmBlockThreshold.BLOCK_NONE)
             for harm_category in iter(HarmCategory)
         }
-    safety_settings = {
-        }
     response = model.generate_content( [prompt], generation_config=parameters, safety_settings=safety_settings)
     completion = response.text
     if log_file is not None:
@@ -151,39 +143,21 @@ def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model=
         ai_prompt = kwargs["ai_prompt"]
 
     try:
-        if model == "claude-3-opus-20240229":
-            message = anthropic_client.messages.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                model=model,
-                stop_sequences=stop_sequences,
-                temperature=temperature,
-                max_tokens=max_tokens_to_sample,
-                **kwargs
-            )
-            completion = message.content[0].text
-        else:
-            rsp = anthropic_client.completions.create(
-                prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
-                stop_sequences=stop_sequences,
-                model=model,
-                temperature=temperature,
-                max_tokens_to_sample=max_tokens_to_sample,
-                **kwargs
-            )
-            completion = rsp.completion
-        
+        rsp = anthropic_client.completions.create(
+            prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
+            stop_sequences=stop_sequences,
+            model=model,
+            temperature=temperature,
+            max_tokens_to_sample=max_tokens_to_sample,
+            **kwargs
+        )
     except anthropic.APIStatusError as e:
         print(e)
         raise TooLongPromptError()
     except Exception as e:
         raise LLMError(e)
 
-    
+    completion = rsp.completion
     if log_file is not None:
         log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
     return completion
@@ -211,7 +185,6 @@ def complete_text_crfm(prompt=None, stop_sequences = None, model="openai/gpt-4-0
         print("model", model)
         print("max_tokens", max_tokens_to_sample)
         request = Request(
-                model_deployment=model,
                 prompt=prompt, 
                 model=model, 
                 stop_sequences=stop_sequences,
