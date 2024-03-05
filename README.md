@@ -128,6 +128,7 @@ Average Improvement over the baseline in starter code among the runs that made a
 submission at the last step:
 ![](figs/final_improve.png)
 
+See all logs here: https://github.com/q-hwang/MLAgentBench_logs
 
 # Interactive Mode (Under construction)
 
