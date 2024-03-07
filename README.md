@@ -4,6 +4,8 @@ MLAgentBench is a suite of end-to-end Machine Learning (ML) research tasks for b
 dataset and a machine learning task description and autonomously develop or improve an ML model. Paper: https://arxiv.org/abs/2310.03302
 ![](figs/main.png)
 
+Our AI research agent in action on MLAgentBench:
+[![Watch the video](https://img.youtube.com/vi/s9NANrjLEZs/maxresdefault.jpg)](https://youtu.be/s9NANrjLEZs)
 
 Each task is an interactive environment that directly resembles what human researchers see,
 where an agent can read available files, run multiple experiments on a compute cluster, and analyze results to achieve the specified research goal. 
