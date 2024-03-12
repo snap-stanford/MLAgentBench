@@ -51,6 +51,18 @@ OPEN_AI_CHAT_MODELS = {
             completion_token_cost=32.68 / 1000,
             max_tokens=8000,
         ),
+        ChatModelInfo(
+            name="claude-3-opus-20240229",
+            prompt_token_cost=11.02 / 1000,
+            completion_token_cost=32.68 / 1000,
+            max_tokens=4096,
+        ),
+        ChatModelInfo(
+            name="openai/gpt-4-0125-preview",
+            prompt_token_cost=10 / 1000,
+            completion_token_cost=30 / 1000,
+            max_tokens=4096,
+        ),
     ]
 }
 # Set aliases for rolling model IDs

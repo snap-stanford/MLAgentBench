@@ -101,7 +101,11 @@ class Agent:
     def save(self, file_path):
         """ Save the agent state to a file. """
         with open(file_path, "w") as f:
-            json.dump(self.__dict__, f, indent=4,cls=EnhancedJSONEncoder)
+            try:
+                json.dump(self.__dict__, f, indent=4,cls=EnhancedJSONEncoder)
+            except:
+                print("save agent state failed")
+                pass
 
 
     def restore(self, file_path):

@@ -155,7 +155,7 @@ class Config(metaclass=Singleton):
         self.redis_password = os.getenv("REDIS_PASSWORD", "")
         self.wipe_redis_on_start = os.getenv("WIPE_REDIS_ON_START", "True") == "True"
 
-        self.plugins_dir = os.getenv("PLUGINS_DIR", "Auto-GPT/plugins")
+        self.plugins_dir = os.getenv("PLUGINS_DIR", "MLAgentBench/agents/Auto-GPT/plugins")
         self.plugins: List[AutoGPTPluginTemplate] = []
         self.plugins_openai = []
 

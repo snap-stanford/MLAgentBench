@@ -9,16 +9,26 @@ from typing import Dict, List, Optional, Tuple, Union, Any
 from langchain.agents import AgentExecutor
 from langchain.agents import initialize_agent
 from langchain.agents.tools import Tool
-from langchain.chat_models import ChatAnthropic
+from langchain_anthropic import ChatAnthropic
+from langchain.chat_models.base import BaseChatModel
 from langchain.schema import (
     AgentAction,
-    AgentFinish
+    AgentFinish,
+    AIMessage,
+    BaseMessage,
+    ChatMessage,
+    FunctionMessage,
+    HumanMessage,
+    SystemMessage,
+    ChatResult,
+    ChatGeneration
 )
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from langchain.input import get_color_mapping
 from langchain.callbacks import FileCallbackHandler
 from langchain.agents.mrkl.output_parser import MRKLOutputParser
 from MLAgentBench.schema import Action
+from MLAgentBench.LLM import complete_text_crfm
 from .agent import Agent
 
 
@@ -110,9 +120,137 @@ class EnvTool:
     {usage}
 }}"""
             invalid_action_error = f"The action input for {self.action_info.name} needs to be a valid json with proper entries. You may have missed the comma between entries. Please use the correct format and try again:\n{usage}"
-            observation = "ActionInputParsingError: "+ e + "\n" + invalid_action_error
+            observation = "ActionInputParsingError: "+ str(e) + "\n" + invalid_action_error
 
         return observation
+
+
+def convert_message_to_dict(message: BaseMessage) -> dict:
+    """Convert a LangChain message to a dictionary.
+
+    Args:
+        message: The LangChain message.
+
+    Returns:
+        The dictionary.
+    """
+    message_dict = {}
+    if isinstance(message, ChatMessage):
+        message_dict = {"role": message.role, "content": message.content}
+    elif isinstance(message, HumanMessage):
+        message_dict = {"role": "user", "content": message.content}
+    elif isinstance(message, AIMessage):
+        message_dict = {"role": "assistant", "content": message.content}
+        if "function_call" in message.additional_kwargs:
+            message_dict["function_call"] = message.additional_kwargs["function_call"]
+            # If function call only, content is None not empty string
+            if message_dict["content"] == "":
+                message_dict["content"] = None
+        if "tool_calls" in message.additional_kwargs:
+            message_dict["tool_calls"] = message.additional_kwargs["tool_calls"]
+            # If tool calls only, content is None not empty string
+            if message_dict["content"] == "":
+                message_dict["content"] = None
+    elif isinstance(message, SystemMessage):
+        message_dict = {"role": "system", "content": message.content}
+    elif isinstance(message, FunctionMessage):
+        message_dict = {
+            "role": "function",
+            "content": message.content,
+            "name": message.name,
+        }
+    # elif isinstance(message, ToolMessage):
+    #     message_dict = {
+    #         "role": "tool",
+    #         "content": message.content,
+    #         "tool_call_id": message.tool_call_id,
+    #     }
+    else:
+        raise TypeError(f"Got unknown type {message}")
+    if "name" in message.additional_kwargs:
+        message_dict["name"] = message.additional_kwargs["name"]
+    return message_dict
+
+
+class ChatCRFM(BaseChatModel):
+    """ A wrapper class to wrap the CRFM chat model to the Langchain framework."""
+    
+    model: str = "openai/gpt-3.5-turbo-0301"
+    # """Model name to use."""
+    temperature: float = 0.7
+    max_tokens:  int = 2000
+    model_kwargs: dict = {}
+    
+    @property
+    def _default_params(self):
+        params = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens_to_sample": self.max_tokens,
+            **self.model_kwargs
+        }
+        return params
+    
+    
+    def _generate(
+        self,
+        messages,
+        stop = None,
+        run_manager = None,
+        **kwargs
+    ) :
+        
+        message_dicts, params = self._create_message_dicts(messages, stop)
+        params = {
+            **params,
+            **kwargs,
+        }
+        response = complete_text_crfm(messages=message_dicts, **params)
+        return self._create_chat_result(response)
+    
+    def _create_message_dicts(
+        self, messages, stop):
+        params = self._default_params
+        if stop is not None:
+            if "stop" in params:
+                raise ValueError("`stop` found in both the input and default params.")
+            params["stop"] = stop
+        message_dicts = [convert_message_to_dict(m) for m in messages]
+        return message_dicts, params
+    
+    async def _agenerate(
+        self,
+        messages,
+        stop = None,
+        run_manager = None,
+        **kwargs
+    ) :
+        message_dicts, params = self._create_message_dicts(messages, stop)
+        params = {
+            **params,
+            **kwargs,
+        }
+        response = await complete_text_crfm(messages=message_dicts, **params)
+        return self._create_chat_result(response)
+    
+    def _create_chat_result(self, response) :
+        generations = [ChatGeneration(
+                message=AIMessage(content=response) ,
+                generation_info={},
+            )]
+        token_usage = 0
+        llm_output = {
+            "token_usage": token_usage,
+            "model_name": self.model,
+            "system_fingerprint": "",
+        }
+        return ChatResult(generations=generations, llm_output=llm_output)
+    
+    @property
+    def _llm_type(self) -> str:
+        """Return type of chat model."""
+        return "crfm-chat"
+
 
 
 class LangChainAgent(Agent):   
@@ -131,6 +269,9 @@ class LangChainAgent(Agent):
         if self.args.llm_name.startswith("claude"):
             llm = ChatAnthropic(model=self.args.llm_name, anthropic_api_key=open("claude_api_key.txt").read().strip(), temperature=0.5, max_tokens_to_sample = 2000)
             agent_kwargs = {"output_parser": AnthropicOutputParser()}
+        elif "/" in self.args.llm_name:
+            llm = ChatCRFM(model=self.args.llm_name, temperature=0.5, max_tokens = 2000)
+            agent_kwargs = {"output_parser": AnthropicOutputParser()}
         else:
             # TODO: add support for other agents
             raise NotImplementedError
@@ -145,7 +286,7 @@ class LangChainAgent(Agent):
             )
 
         AgentExecutor._call = AgentExecutorWithState._call 
-        agent = initialize_agent(tools, llm, agent=self.args.langchain_agent, max_iterations = self.args.agent_max_steps, return_intermediate_steps=True, agent_kwargs = agent_kwargs, verbose=True)
+        agent = initialize_agent(tools, llm, agent=self.args.langchain_agent, max_iterations = self.args.agent_max_steps, return_intermediate_steps=True, agent_kwargs = agent_kwargs, verbose=True, handle_parsing_errors=True)
 
         with open(os.path.join(self.log_dir, "main_log"), "a", 1) as f:
             f.write(agent.agent.llm_chain.prompt.template) 

@@ -30,14 +30,14 @@ def count_message_tokens(
         )
         tokens_per_name = -1  # if there's a name, the role is omitted
         encoding_model = "gpt-3.5-turbo"
-    elif model.startswith("gpt-4") or model == "openai/gpt-4-0314":
+    elif model.startswith("gpt-4") or model.startswith("openai/gpt-4"):
         tokens_per_message = 3
         tokens_per_name = 1
         encoding_model = "gpt-4"
-    elif model.startswith("claude-v1"):
+    elif model.startswith("claude"):
         tokens_per_message = 1
         tokens_per_name = 1
-        encoding_model = "claude-v1"
+        encoding_model = "claude"
     else:
         raise NotImplementedError(
             f"count_message_tokens() is not implemented for model {model}.\n"

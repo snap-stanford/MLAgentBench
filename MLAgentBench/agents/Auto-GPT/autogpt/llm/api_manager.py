@@ -53,7 +53,7 @@ class ApiManager(metaclass=Singleton):
         str: The AI's response.
         """
         cfg = Config()
-        if model.startswith("claude"):
+        if model.startswith("claude") or  "/" in model:
             return self.create_chat_completion_non_openai(messages, model, temperature, max_tokens)
 
         if temperature is None:
@@ -102,25 +102,49 @@ class ApiManager(metaclass=Singleton):
         cfg = Config()
         if temperature is None:
             temperature = cfg.temperature
-            
-        log_file = os.path.join(LOG_DIR, model + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log")
-        try:
-            prompt = "" 
-            for idx, m in enumerate(messages):
-                if m["role"] in ["user" , "system"]:
-                    if idx != 0 and  messages[idx-1]["role"] not in ["user" , "system"]:
-                        prompt += anthropic.HUMAN_PROMPT + " "
-                    prompt += m["content"] + "\n"
-                else:
-                    prompt += anthropic.AI_PROMPT + m["content"] + "\n"
 
-            completion = complete_text_claude(prompt=prompt,
-                                            model=model,
-                                            temperature=temperature,
-                                            max_tokens_to_sample=max_tokens,
-                                            log_file = log_file)
+        log_file = os.path.join(LOG_DIR, model.replace("/", "_") + "_" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".log")
+
+        try:
+            if model.startswith("claude"):
+                prompt = "" 
+                new_messages = []
+                for idx, m in enumerate(messages):
+                    if m["role"] in ["user" , "system"]:
+                        if idx != 0 and  messages[idx-1]["role"] not in ["user" , "system"]:
+                            prompt += anthropic.HUMAN_PROMPT + " "
+                        prompt += m["content"] + "\n"
+                        if len(new_messages)  ==0 or new_messages[-1]["role"] == "assistant":
+                            new_messages.append({
+                                "role": "user",
+                                "content": m["content"]
+                            })
+                        else:
+                            new_messages[-1]["content"] += "\n\n" + m["content"]
+                    else:
+                        prompt += anthropic.AI_PROMPT + m["content"] + "\n"
+                        new_messages.append({
+                            "role": "assistant",
+                            "content": m["content"]
+                        })
+
+                completion = complete_text_claude(prompt=prompt,
+                                                messages=new_messages,
+                                                model=model,
+                                                temperature=temperature,
+                                                max_tokens_to_sample=max_tokens,
+                                                log_file = log_file)
+            else:
+                completion = complete_text_crfm(messages=messages,
+                                                model=model,
+                                                temperature=temperature,
+                                                max_tokens_to_sample=max_tokens,
+                                                log_file = log_file)
+                
         except Exception as e:
+            print(e)
             return Namespace(**{"error": str(e)})
+        
             
         
         with open(log_file, "r") as f:
