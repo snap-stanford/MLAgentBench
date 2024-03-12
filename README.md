@@ -1,15 +1,15 @@
-# MLAgentBench: Benchmarking Large Language Models As AI Research Agents
+# MLAgentBench: Evaluating Language Agents on Machine Learning Experimentation
 
-MLAgentBench is a suite of end-to-end Machine Learning (ML) research tasks for benchmarking AI research agents, where the agent aims to take a given 
+MLAgentBench is a suite of end-to-end Machine Learning (ML) experimentation tasks for benchmarking AI agents, where the agent aims to take a given 
 dataset and a machine learning task description and autonomously develop or improve an ML model. Paper: https://arxiv.org/abs/2310.03302
 ![](figs/main.png)
 
-Our AI research agent in action on MLAgentBench:
+Our AI agent in action on MLAgentBench:
 [![Watch the video](https://img.youtube.com/vi/s9NANrjLEZs/maxresdefault.jpg)](https://youtu.be/s9NANrjLEZs)
 
 Each task is an interactive environment that directly resembles what human researchers see,
 where an agent can read available files, run multiple experiments on a compute cluster, and analyze results to achieve the specified research goal. 
-Specifically, we include 15 diverse ML engineering tasks,
+Specifically, we include 13 diverse ML engineering tasks,
 achievable by trying different machine learning methods, data processing, architectures, training processes, etc:
 ![](figs/table.png)
 
