@@ -1,0 +1,46 @@
+The weighted_pu_loss function in loss.py file is a Neural Network using PyTorch Ecosystem of libraries. The loss function are described in the paper "AUDIO SIGNAL ENHANCEMENT WITH LEARNING FROM POSITIVE AND UNLABELLED
+DATA" (arXiv:2210.15143 [cs.SD] Oct 2022). Below is an excerpt from the paper that describes the Pulse algorithm, please understand it and build the loss function accordingly. Write the function `weighted_pu_loss`, which computes the non-negative emprical risk loss function used for training, as described in the following. Keep in mind the `y` contained in the formulae for $\ell$ may differ from the `y` passed into the function. Please try your best to ensure numerical stability in this function. Signatures have been included in the function:
+
+
+
+By applying PULSE algorithm, we can address the problem of training speech enhancement (SE) models using non-parallel data. Here I provide you some high-level ideas of Pulse algorithm.
+
+#PU Learning Framework:
+PULSE is based on PU learning, which stands for Positive-Unlabeled learning. In the context of speech enhancement, "Positive" refers to noisy speech samples, and "Unlabeled" refers to data that may contain either clean or noisy samples but without labels. PULSE leverages this framework to train speech enhancement models effectively.
+
+#Training Data:
+PULSE uses three types of data for training: Positive Data (P): This corresponds to the noisy speech data, which is readily available. Unlabeled Data (U): This includes data that can contain either clean or noisy samples but lacks labels. Unlabeled data is relatively easy to collect since it doesn't require precise labeling. Optional Negative Data (N): If available, negative data corresponds to clean speech samples. While it's not always necessary, having negative data can be beneficial for training.
+
+#Loss Function:
+PULSE introduces a novel weighted loss function designed to maximize the separation between the positive (noisy) and unlabeled (potentially clean or noisy) data. This loss function is formulated to ensure that the model learns to enhance the positive data while suppressing the noise and potential clean signals in the unlabeled data.
+
+#Empirical Risk Minimization:
+The algorithm employs empirical risk minimization to optimize the model. This approach aims to minimize the loss function by adjusting the model's parameters during training.
+
+#Pipeline of PULSE:
+Masking-based SE. In this paper, we employ a masking-based approach to SE, where we use a DNN to estimate a mask in the short-time Fourier transform (STFT) domain (Fig. 2). In this approach, an input noisy signal clip in the time domain is first transformed into the TF domain by the STFT. Let the resulting STFT-domain representation (i.e., the complex spectrogram) be $\widetilde{x}_{j} \in \mathbb{C}$, where $j$ is the TF component index. Then, we compute a magnitude spectrogram $\left|\widetilde{x}_{j}\right|$ by taking the absolute value. A DNN is given the magnitude spectrogram and estimates a mask $\mu_{j}$. An enhanced signal is obtained by elementwise multiplication (i.e., masking) $\mu_{j} \widetilde{x}_{j}$, which suppresses TF components dominated by noise. Finally, the enhanced signal is transformed back into the time domain by the inverse STFT.
+
+#Motivation:
+In this approach, it is crucial to train the DNN so that the mask can be estimated properly. If we were given parallel training data consisting of both noisy signals and the corresponding clean signals, we could do so by supervised learning in a straightforward way. However, as we already mentioned in Sec. 11 such a training methodology has fundamental issues, which motivated us to develop PULSE.
+
+#Pipeline of PULSE:
+The training data consist of noisy signal clips and noise clips. We first compute a magnitude spectrogram of each clip by applying the STFT and then taking the absolute value. Then, we crop a rectangular spectrogram patch centred at each TF point as the input feature. Let us define a TF component as $\mathrm{P}$ and $\mathrm{N}$ if the signal is inactive and active in the corresponding spectrogram patch, respectively. Each TF component of a noise clip is P. On the other hand, each TF component of a noisy signal clip can be either $\mathrm{P}$ or $\mathrm{N}$ and is thus treated as $\mathrm{U}$. Thus, $\mathcal{X}^{\mathrm{P}}$ and $\mathcal{X}^{\mathrm{U}}$ consist of the spectrogram patches of noise clips and those of noisy signal clips, respectively. These $\mathrm{P}$ and $\mathrm{U}$ data are used to train a CNN to classify each TF component as $\mathrm{P}$ or $\mathrm{N}$ by PU learning described in Sec. 3. During testing, the mask $\mu_{j}$ is obtained by
+$$
+\mu_{j} \leftarrow \begin{cases}1 & \left(\widehat{y}_{j}=-1\right) \\ 0 & \left(\widehat{y}_{j}=+1\right)\end{cases}
+$$
+Here, $\widehat{y}_{j}:=\operatorname{sgn}\left(f_{\widehat{\boldsymbol{\theta}}}\left(\mathbf{x}_{j}\right)\right)$ is the predicted label of the $j$ th TF component, where $\mathbf{x}_{j}$ is the corresponding spectrogram patch and $\widehat{\boldsymbol{\theta}}$ is the trained parameters. This mask retains the TF components classified as $\mathrm{N}$ and removes those classified as $\mathrm{P}$.
+
+#Architecture:
+The classifier $f_{\boldsymbol{\theta}}$ is modelled by the following 11-layer CNN: Compress(1/15)-Conv2d(1, 8, 3)-Conv2d(8, 8, 3)Conv2d(8, 16, 3)-Conv2d(16, 16, 3)-Conv2d(16, 32, 3)-Conv2d(32, 32, 3)-Conv2d(32, 64, 3)-Conv2d(64, 64, 3)-Conv2d(64, 128, 1)Conv2d(128, 128, 1)-Conv2d(128, 1, 1). Here, Compress $(\alpha)$ is a power-law compression layer that applies the non-linear function $(\cdot)^{\alpha}$ elementwise. Conv2d $\left(C_{\text {in }}, C_{\text {out }}, K\right)$ is a two-dimensional convolutional layer with $C_{\text {in }}$ input channels, $C_{\text {out }}$ output channels, a kernel size of $K \times K$, a stride of $(1,1)$, and no padding. All but the last convolutional layer are followed by a rectified linear unit (ReLU) and then a dropout layer with a dropout rate of 0.2. The size of the input spectrogram patch is set to that of the receptive field of the network (i.e., $17 \times 17$ ) so that the $\mathrm{CNN}$ output size is $1 \times 1$.
+
+#Loss Function:
+It is crucial to design the loss $\ell(\mathbf{x}, y, \boldsymbol{\theta})$ properly to obtain a good SE performance by PULSE. It measures the deviation of the classifier $f_{\boldsymbol{\theta}}$ from $(\mathbf{x}, y)$, where $\mathbf{x}$ is a spectrogram patch and $y$ is the corresponding label. Commonly used losses in PU learning, such as the sigmoid loss (2) or the cross-entropy, assign uniform weights to all TF components. As the classification accuracy of the TF component with a larger magnitude is more significant in SE, we introduce the magnitude spectrogram $w(\mathbf{x}):=|\widetilde{x}|$ as a weight in (2). Specifically, our loss is given by
+$$
+\ell(\mathbf{x}, y, \boldsymbol{\theta})=w(\mathbf{x}) \sigma\left(-y f_{\boldsymbol{\theta}}(\mathbf{x})\right),
+$$
+which we call a weighted sigmoid loss.
+The PU empirical loss function that is used as the loss during training uses the weighted sigmoid loss and is specified by this formula:
+\begin{align*} & {{\hat R}_{{\text{nnPU}}}}({\mathbf{\theta }}): = \frac{\pi }{{\left| {{\mathcal{X}^{\text{P}}}} \right|}}\sum\limits_{{\mathbf{x}} \in {\mathcal{X}^{\text{P}}}} \ell ({\mathbf{x}}, + 1,{\mathbf{\theta }}) + \left( {\frac{1}{{\left| {{\mathcal{X}^{\text{U}}}} \right|}}\sum\limits_{{\mathbf{x}} \in {\mathcal{X}^{\text{U}}}} \ell ({\mathbf{x}}, - 1,{\mathbf{\theta }})} \right. \\ & {\left. { - \frac{\pi }{{\left| {{\mathcal{X}^{\text{P}}}} \right|}}\sum\limits_{{\mathbf{x}} \in {\mathcal{X}^{\text{P}}}} \ell ({\mathbf{x}}, - 1,{\mathbf{\theta }})} \right)_ + }, \tag{8}\end{align*}
+
+#Here are more details about the loss function you need to implement:
+Keep in mind the `y` contained in the formulae for $\ell$ may differ from the `y` passed into the function. Please try your best to ensure numerical stability in the function. Signatures of the loss function "weighted_pu_loss" are available.

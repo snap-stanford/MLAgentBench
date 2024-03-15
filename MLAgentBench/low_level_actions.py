@@ -101,7 +101,7 @@ def list_files( dir_path, work_dir = ".", **kwargs):
 @record_low_level_step
 def read_file(file_name, work_dir = '.', **kwargs):
     try:
-        observation = open(os.path.join(work_dir,file_name)).read()
+        observation = open(os.path.join(work_dir, 'env', file_name)).read()
         return observation
     except:
         raise EnvException(f"cannot read file {file_name}")
