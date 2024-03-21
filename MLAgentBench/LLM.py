@@ -85,11 +85,11 @@ def complete_text_hf(prompt, stop_sequences=[], model="huggingface/codellama/Cod
     if model in loaded_hf_models:
         hf_model, tokenizer = loaded_hf_models[model]
     else:
-        hf_model = AutoModelForCausalLM.from_pretrained(model).to("cuda:6")
+        hf_model = AutoModelForCausalLM.from_pretrained(model).to("cuda:9")
         tokenizer = AutoTokenizer.from_pretrained(model)
         loaded_hf_models[model] = (hf_model, tokenizer)
         
-    encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to("cuda:6")
+    encoded_input = tokenizer(prompt, return_tensors="pt", return_token_type_ids=False).to("cuda:9")
     stop_sequence_ids = tokenizer(stop_sequences, return_token_type_ids=False, add_special_tokens=False)
     stopping_criteria = StoppingCriteriaList()
     for stop_sequence_input_ids in stop_sequence_ids.input_ids:
@@ -129,46 +129,76 @@ def complete_text_gemini(prompt, stop_sequences=[], model="gemini-pro", max_toke
             harm_category: SafetySetting.HarmBlockThreshold(SafetySetting.HarmBlockThreshold.BLOCK_NONE)
             for harm_category in iter(HarmCategory)
         }
+    safety_settings = {
+        }
     response = model.generate_content( [prompt], generation_config=parameters, safety_settings=safety_settings)
     completion = response.text
     if log_file is not None:
         log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
     return completion
 
-def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model="claude-v1", max_tokens_to_sample = 2000, temperature=0.5, log_file=None, **kwargs):
+def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model="claude-v1", max_tokens_to_sample = 2000, temperature=0.5, log_file=None, messages=None, **kwargs):
     """ Call the Claude API to complete a prompt."""
 
     ai_prompt = anthropic.AI_PROMPT
     if "ai_prompt" in kwargs is not None:
         ai_prompt = kwargs["ai_prompt"]
 
+    
     try:
-        rsp = anthropic_client.completions.create(
-            prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
-            stop_sequences=stop_sequences,
-            model=model,
-            temperature=temperature,
-            max_tokens_to_sample=max_tokens_to_sample,
-            **kwargs
-        )
+        if model == "claude-3-opus-20240229":
+            while True:
+                try:
+                    message = anthropic_client.messages.create(
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": prompt,
+                            }
+                        ] if messages is None else messages,
+                        model=model,
+                        stop_sequences=stop_sequences,
+                        temperature=temperature,
+                        max_tokens=max_tokens_to_sample,
+                        **kwargs
+                    )
+                except anthropic.InternalServerError as e:
+                    pass
+                try:
+                    completion = message.content[0].text
+                    break
+                except:
+                    print("end_turn???")
+                    pass
+        else:
+            rsp = anthropic_client.completions.create(
+                prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
+                stop_sequences=stop_sequences,
+                model=model,
+                temperature=temperature,
+                max_tokens_to_sample=max_tokens_to_sample,
+                **kwargs
+            )
+            completion = rsp.completion
+        
     except anthropic.APIStatusError as e:
         print(e)
         raise TooLongPromptError()
     except Exception as e:
         raise LLMError(e)
 
-    completion = rsp.completion
+    
     if log_file is not None:
         log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
     return completion
 
 
 def get_embedding_crfm(text, model="openai/gpt-4-0314"):
-    request = Request(model="openai/text-similarity-ada-001", prompt=text, embedding=True)
+    request = Request(model="openai/text-embedding-ada-002", prompt=text, embedding=True)
     request_result: RequestResult = service.make_request(auth, request)
     return request_result.embedding 
     
-def complete_text_crfm(prompt=None, stop_sequences = None, model="openai/gpt-4-0314",  max_tokens_to_sample=2000, temperature = 0.5, log_file=None, messages = None, **kwargs):
+def complete_text_crfm(prompt="", stop_sequences = [], model="openai/gpt-4-0314",  max_tokens_to_sample=2000, temperature = 0.5, log_file=None, messages = None, **kwargs):
     
     random = log_file
     if messages:
@@ -182,9 +212,10 @@ def complete_text_crfm(prompt=None, stop_sequences = None, model="openai/gpt-4-0
                 random = random
             )
     else:
-        print("model", model)
-        print("max_tokens", max_tokens_to_sample)
+        # print("model", model)
+        # print("max_tokens", max_tokens_to_sample)
         request = Request(
+                # model_deployment=model,
                 prompt=prompt, 
                 model=model, 
                 stop_sequences=stop_sequences,
@@ -205,7 +236,7 @@ def complete_text_crfm(prompt=None, stop_sequences = None, model="openai/gpt-4-0
         raise LLMError(request.error)
     completion = request_result.completions[0].text
     if log_file is not None:
-        log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
+        log_to_file(log_file, prompt if not messages else str(messages), completion, model, max_tokens_to_sample)
     return completion
 
 
