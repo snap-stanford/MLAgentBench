@@ -243,15 +243,35 @@ def get_all_runs_eval(print_labels = print_labels, print_task_labels = print_tas
     df["final_score"] = df["final_score"].apply(lambda x: x if x > 0 else None)
 
     
-    baseline = df[df["exp"] == "Baseline"][[ "task", "exp", "run", "final_score"]].groupby(["task", "exp"]).mean().reset_index()
+    baseline = df[df["exp"] == "Baseline"][[ "task", "exp", "final_score"]].groupby(["task", "exp"]).mean().reset_index()
     # special baseline numbers
-    baseline.at[baseline[baseline["task"] == "imdb"].index.values[0],"final_score"] = 0.5
-    baseline.at[baseline[baseline["task"] == "fathomnet"].index.values[0],"final_score"] = 1e-10
-    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "spaceship-titanic", "exp" :"Baseline", "run": 0, "final_score":  0.5}])], ignore_index=True)
+    try:
+        baseline.at[baseline[baseline["task"] == "imdb"].index.values[0], "final_score"] = 0.5
+        baseline.at[baseline[baseline["task"] == "fathomnet"].index.values[0], "final_score"] = 1e-10
+    except:
+        baseline = pd.concat(
+            [
+                baseline,
+                pd.DataFrame(
+                    [{"task": "imdb", "exp": "Baseline", "final_score": 0.5}]
+                ),
+            ],
+            ignore_index=True,
+        )
+        baseline = pd.concat(
+            [
+                baseline,
+                pd.DataFrame(
+                    [{"task": "fathomnet", "exp": "Baseline", "final_score": 1e-10}]
+                ),
+            ],
+            ignore_index=True,
+        )
+    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "spaceship-titanic", "exp" :"Baseline", "final_score":  0.5}])], ignore_index=True)
     
-    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "house-price", "exp" :"Baseline", "run": 0, "final_score": 1e10}])], ignore_index=True)
-    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "ogbn-arxiv", "exp" :"Baseline", "run": 0, "final_score": 0.3134}])], ignore_index=True)
-    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "vectorization", "exp" :"Baseline", "run": 0, "final_score": 6.1742}])], ignore_index=True)
+    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "house-price", "exp" :"Baseline", "final_score": 1e10}])], ignore_index=True)
+    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "ogbn-arxiv", "exp" :"Baseline", "final_score": 0.3134}])], ignore_index=True)
+    baseline = pd.concat([baseline, pd.DataFrame([{"task" : "vectorization", "exp" :"Baseline", "final_score": 6.1742}])], ignore_index=True)
     return df, baseline
  
 def get_all_runs_results(df = None, baseline = None, print_labels = print_labels, print_task_labels = print_task_labels):
