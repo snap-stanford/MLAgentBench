@@ -6,6 +6,10 @@ from MLAgentBench.LLM import complete_text_fast, complete_text
 from MLAgentBench.schema import Action
 from .agent import Agent
 
+
+MAX_TOKENS = 1000 # Sampling max
+TEMPERATURE = 1 # High temp for generation
+
 initial_prompt = """You are a helpful research assistant. You have access to the following tools:
 {tools_prompt}
 
@@ -110,7 +114,11 @@ class ResearchAgent(Agent):
             valid_response = False
             for _ in range(self.args.max_retries):
                 log_file = os.path.join(self.log_dir , f"step_{curr_step}_log.log")
-                completion = complete_text(prompt, log_file, self.args.llm_name)
+                model_kwargs = {
+                    "max_tokens": MAX_TOKENS,
+                    "temperature": TEMPERATURE,
+                }
+                completion = complete_text(prompt, log_file, self.args.llm_name, **model_kwargs)
 
                 try:
                     entries = self.parse_entries(completion, self.valid_format_entires)
