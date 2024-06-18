@@ -348,9 +348,9 @@ LOW_LEVEL_ACTIONS = [
     ),
     ActionInfo(
         name="Final Answer",
-        description="Use this to provide the final answer to the current task.",
+        description="Use this to indicate completion. IMPORTANT: You will not be able to perform any other actions after this one. Use this only when you are sure that you have completed the task (e.g. you have provided your submission as instructed).",
         usage={
-            "final_answer": "a detailed description on the final answer"
+            "final_answer": "summary of what you have accomplished and the final state of the task"
         },
         return_value="The observation will be empty.",
         function=(lambda **kwargs: ""),
