@@ -88,7 +88,7 @@ def check_file_in_work_dir(arg_names, **kwargs):
 @record_low_level_step
 def list_files( dir_path, work_dir = ".", **kwargs):
     try:
-        observation = subprocess.check_output(["ls", "-F", os.path.join(work_dir,dir_path)]).decode("utf-8")
+        observation = subprocess.check_output(["ls", os.path.join(work_dir,dir_path)]).decode("utf-8")
         return observation
     except:
         raise EnvException(f"Cannot list file in the {dir_path} directory")
