@@ -84,7 +84,7 @@ def check_file_in_work_dir(arg_names, **kwargs):
     return inner
 
 
-# @check_file_in_work_dir(["dir_path"])
+@check_file_in_work_dir(["dir_path"])
 @record_low_level_step
 def list_files( dir_path, work_dir = ".", **kwargs):
     try:
@@ -97,7 +97,7 @@ def list_files( dir_path, work_dir = ".", **kwargs):
 
 
 
-# @check_file_in_work_dir(["file_name"])
+@check_file_in_work_dir(["file_name"])
 @record_low_level_step
 def read_file(file_name, work_dir = '.', **kwargs):
     try:
@@ -107,7 +107,7 @@ def read_file(file_name, work_dir = '.', **kwargs):
         raise EnvException(f"cannot read file {file_name}")
 
 
-# @check_file_in_work_dir(["file_name"])
+@check_file_in_work_dir(["file_name"])
 @check_file_read_only(["file_name"])
 @record_low_level_step
 def write_file(file_name, content, work_dir = ".", **kwargs):
@@ -120,7 +120,7 @@ def write_file(file_name, content, work_dir = ".", **kwargs):
         raise EnvException(f"cannot write file {file_name}")
 
 
-# @check_file_in_work_dir(["file_name"])
+@check_file_in_work_dir(["file_name"])
 @check_file_read_only(["file_name"])
 @record_low_level_step
 def append_file(file_name, content, work_dir = ".", **kwargs):
@@ -133,7 +133,7 @@ def append_file(file_name, content, work_dir = ".", **kwargs):
         raise EnvException(f"cannot append file {file_name}")
 
 
-# @check_file_in_work_dir(["source", "destination"])
+@check_file_in_work_dir(["source", "destination"])
 @check_file_read_only(["destination"])
 @record_low_level_step
 def copy_file( source, destination, work_dir = ".", **kwargs):
@@ -146,7 +146,7 @@ def copy_file( source, destination, work_dir = ".", **kwargs):
         raise EnvException(f"File {source} copy to {destination} failed. Check whether the source and destinations are valid.")
 
 
-# @check_file_in_work_dir(["script_name"])
+@check_file_in_work_dir(["script_name"])
 @record_low_level_step
 def undo_edit_script( script_name, work_dir = ".", **kwargs):
     
@@ -168,7 +168,7 @@ def undo_edit_script( script_name, work_dir = ".", **kwargs):
         )
 
 
-# @check_file_in_work_dir(["script_name"])
+@check_file_in_work_dir(["script_name"])
 @record_low_level_step
 def execute_script(script_name, work_dir = ".", **kwargs):
     if not os.path.exists(os.path.join(work_dir,script_name)):
